@@ -4,11 +4,11 @@ import type { HeadFC, PageProps } from 'gatsby'
 
 import {
     container,
-    heading,
     navLinks,
     navLinkItem,
-    navLinkText
-} from './layout.module.scss'
+    navLinkText,
+    heading
+} from './layout.css'
 
 type LayoutProps = {
     pageTitle: string,
