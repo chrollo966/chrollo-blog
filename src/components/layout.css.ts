@@ -23,3 +23,10 @@ export const navLinkItem = style({
 export const navLinkText = style({
     color: 'black'
 });
+
+export const siteTitle = style({
+    fontSize: '3rem',
+    color: 'gray',
+    fontWeight: 700,
+    margin: '3rem 0',
+})
