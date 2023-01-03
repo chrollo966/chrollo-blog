@@ -28,12 +28,15 @@ const BlogPost = ({ data, children }: BlogPostType) => {
                 image={image}
                 alt={data.mdx.frontmatter.hero_image_alt as string}
             />
-            <p>
-                Photo Credit:{" "}
-                <a href={data.mdx.frontmatter.hero_image_credit_link}>
-                    {data.mdx.frontmatter.hero_image_credit_text}
-                </a>
-            </p>
+            { data.mdx.frontmatter.hero_image_credit_text && data.mdx.frontmatter.hero_image_credit_link &&
+                    <p>
+                        Photo Credit:{" "}
+                        <a href={data.mdx.frontmatter.hero_image_credit_link}>
+                            {data.mdx.frontmatter.hero_image_credit_text}
+                        </a>
+                    </p>
+                
+            }
                 {children}
             
 
@@ -57,6 +60,7 @@ export const query = graphql`
                         gatsbyImageData
                     }
                 }
+                private
             }
         }
     }

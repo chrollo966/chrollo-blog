@@ -27,12 +27,16 @@ const BlogPage = ({ data }: PageProps<Queries.BlogPageQuery>) => {
 
 export const query = graphql`
     query BlogPage {
-        allMdx(sort: {frontmatter: {date: DESC}}) {
+        allMdx(
+            sort: {frontmatter: {date: DESC}}
+            filter: {frontmatter: {private: {ne: true}}}
+        ) {
             nodes {
                 frontmatter {
                     date(formatString: "MMMM D, YYYY")
                     title
                     slug
+                    private
                 }
                 id
             }

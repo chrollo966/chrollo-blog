@@ -1,0 +1,181 @@
+---
+title: "Gatsbyのチュートリアルに型付けした"
+date: "2023-01-04"
+slug: "gatsby-tutorial-typescript"
+hero_image: "./dog-one.jpeg"
+hero_image_alt: "A dog"
+hero_image_credit_text: "Pauline Loroy"
+hero_image_credit_link: "https://unsplash.com/photos/U3aF7hgUSrk"
+private: true
+---
+
+# Gatsby + TypeScript で躓いた箇所の対応
+
+Gatsby の Tutorial: [Learn how Gatsby works](https://www.gatsbyjs.com/docs/tutorial/) を参考にしてブログシステムを構築した．同時にこのチュートリアルを TypeScript に置き換えながら読み書きしていたのだが，少々躓くところがあったので自分用にまとめる．
+
+## Part 0: Set Up Your Development Environment
+
+ここはチュートリアルがやさしく困らなかった
+
+## Part 1: Create and Deploy Your First Gatsby Site
+
+ここで `npm init gatsby` として Gatsby サイトをつくる準備をする．
+
+途中で
+
+```
+Will you be using JavaScript or TypeScript?
+❯ JavaScript
+  TypeScript
+```
+
+という選択肢があるので，これは TypeScript を選んでおこう．
+
+## Part 2: Use and Style React Components
+
+このあたりから React + TypeScript のコードを書くので型をつける．
+
+### Task: Update the home page content
+
+ここで `src/pages/index.js` に書くコード例があるのだが，これは拡張子を `src/pages/index.tsx` と変える．
+
+そして，定義されている `IndexPage` と `Head` というアロー関数に型ををつけよう．
+
+```TSX
+import * as React from 'react'
+import type { PageProps, HeadFC } from 'gatsby' // (1)
+
+const IndexPage: React.FC<PageProps> = () => { // (2)
+    /* snip */
+}
+
+export const Head: HeadFC = () => <title>HomePage</title> // (3)
+
+/* snip */
+```
+
+1. `import type { PageProps, HeadFC } from 'gatsby` で必要な型をインポート
+2. `const IndexPage: React.FC<PageProps>` で， `IndexPage` の型を書く（他の良い書き方もあるぽい）
+3. `export const Head: HeadFC` で， `Head` にも `HeadFC` という型をつける
+
+関数コンポーネントの引数を `prop` という． `PageProps` はページコンポーネントにつける型． `HeadFC` は `Head` 関数コンポーネントにつける型．いずれも Gatsby が用意してくれている． `React.FC` は関数コンポーネントにつける型． `<PageProps>` はジェネリクスという機能で，とりあえずは `IndexPage` の引数の型だと思えばよさそう．
+
+### Task: Create a new page component for an About page
+
+ここの `AboutPage` や `Head` も同じく `AboutPage: React.FC<PageProps>`, `Head: HeadFC` と型をつける．
+
+### Create a reusable layout component
+
+`Layout` の引数に `{ pageTitle, children }` が出てきたのでこれに型をつける．
+
+* `pageTitle` は文字通りページのタイトルで文字列なので `string` 型にする
+* `children` の型は `React.ReactNode`．
+* ただし，引数がオブジェクトなので，オブジェクトに型を付けるために `type` エイリアスを使い型を定義する
+
+```TSX
+/* snip */
+
+type LayoutProps = {
+    pageTitle: string,
+    children: React.ReactNode,
+}
+
+const Layout = ({ pageTitle, children }: LayoutProps) => {
+    /* snip */
+}
+
+/* snip */
+```
+
+### Style components with CSS Module
+
+Gatsby のチュートリアルでは CSS Modules を使ったスタイリングが紹介されているが，CSS Modules の型の取り扱いがよくわからない（CSS Modules `layout.modules.css` の型を定義した`layout.modules.css.d.ts` ファイルを用意した上で `import { container } from './layout.modules.css'` しても，「`container` が `layout.modules.css` から export されていません」という内容のむかつくエラーが吐かれる．Yack🤢）．その上，何やら CSS Modules が将来 deprecated（廃止）になる可能性があるだの不穏な記事もあるので，ここでは Gatsby TypeScript 公式のチュートリアルで採用されている（cf. [TypeScript and Gatsby](https://www.gatsbyjs.com/docs/how-to/custom-configuration/typescript/)） **Vanilla Extract** というライブラリを使った．公式サイトを参考にしながらチュートリアルの `src/components/layout.module.css` を `src/components/layout.css.ts` としてコードを適宜書き換えると以下のようになった．キャメルケースになっていることなどに注意しよう：
+
+```TypeScript
+import { style } from '@vanilla-extract/css';
+
+export const container = style({
+    margin: 'auto',
+    maxWidth: '500px',
+    fontFamily: 'sans-serif'
+});
+  
+export const heading = style({
+    color: 'rebeccapurple'
+});
+
+export const navLinks = style({
+    display: "flex",
+    listStyle: "none",
+    paddingLeft: 0
+});
+
+export const navLinkItem = style({
+    paddingRight: '2rem'
+});
+
+export const navLinkText = style({
+    color: 'black'
+});
+
+export const siteTitle = style({
+    fontSize: '3rem',
+    color: 'gray',
+    fontWeight: 700,
+    margin: '3rem 0',
+})
+```
+
+これでちゃんと export されていることになるのでバンザイ．型のエラーもなし．
+
+## Part 3: Add Features with Plugins
+
+特になし．
+
+## Part 4: Query for Data with GraphQL
+
+### Task: Use a page query to pull the list of post filenames into your blog page
+
+`gatsby-config.ts` の中の `graphqlTypegen` オプションを `true` にすると，GraphQL で取得したデータにも型が生成される．つまり，
+
+```TypeScript gatsby-config.ts
+/* snip */
+
+const config: GatsbyConfig = {
+    /* snip */
+  
+    graphqlTypegen: true,
+
+/* snip */
+```
+
+と設定して，
+
+```TypeScript /src/pages/blog.tsx
+export const query = graphql`
+    query BlogPage{
+        allFile {
+            nodes {
+                name
+            }
+        }
+    }
+`
+```
+
+と**クエリ名をつけて**クエリを書くと， `gatsby-types.d.ts` ファイルの末尾に型が生成される：
+
+```TypeScript
+type BlogPageQuery = { readonly allFile: /* ...snip... */
+```
+
+`query BlogPage` と名前をつけると， `BlogPageQuery` という型が生成される．
+
+`BlogPage` の引数のデータに `PageProps<Queries.BlogPageQuery>` という型をつけよう．
+
+```TypeScript
+const BlogPage = ({ data }: PageProps<Queries.BlogPageQuery>) => {
+    return ( /* snip */
+```
+
+## Part 5. Transform Data to Use MDX
