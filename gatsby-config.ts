@@ -1,4 +1,7 @@
 import type { GatsbyConfig } from "gatsby"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import path from "path"
 
 const config: GatsbyConfig = {
   siteMetadata: {
@@ -14,15 +17,15 @@ const config: GatsbyConfig = {
     `gatsby-plugin-vanilla-extract`,
     `gatsby-plugin-image`,
     `gatsby-plugin-sharp`,
+    `gatsby-plugin-mdx`,
     {
-      resolve: "gatsby-source-filesystem",
+      resolve: `gatsby-source-filesystem`,
       options: {
         name: `blog`,
-        path: `${__dirname}/blog`,
-      }
+        path: path.resolve(`blog`),
+      },
     },
-    `gatsby-plugin-mdx`,
-    `gatsby-transformer-sharp`
+    `gatsby-transformer-sharp`,
   ],
 }
 
